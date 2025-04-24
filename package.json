@@ -4,10 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-  "start": "node dist/index.js",
-  "build": "tsc",
-  "dev": "ts-node src/index.ts"
-},
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/StyNW7/Moorgan-Backend.git"
@@ -21,12 +25,18 @@
   },
   "homepage": "https://github.com/StyNW7/Moorgan-Backend#readme",
   "dependencies": {
+    "@electric-sql/pglite": "^0.3.0",
+    "@neondatabase/serverless": "^1.0.0",
     "dotenv": "^16.5.0",
-    "express": "^5.1.0"
+    "drizzle-orm": "^0.42.0",
+    "express": "^5.1.0",
+    "ws": "^8.18.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.1",
     "@types/node": "^22.14.1",
+    "@types/ws": "^8.18.1",
+    "drizzle-kit": "^0.31.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   }
