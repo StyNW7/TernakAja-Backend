@@ -67,8 +67,8 @@ const verifyJwt = (req: Request, res: Response, next: NextFunction): void => {
 app.post('/register', async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password, name, role, farm_id } = req.body;
-    if (!email || !password || !role || !farm_id) {
-      res.status(400).json({ error: 'Email, password, role, and farm_id are required' });
+    if (!email || !password || !name || !role || !farm_id) {
+      res.status(400).json({ error: 'all credentials are required' });
       return;
     }
 
