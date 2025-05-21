@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
 
 interface JwtPayload {
   sub: number;
@@ -14,17 +14,21 @@ declare global {
   }
 }
 
-export const verifyJwt = (req: Request, res: Response, next: NextFunction): void => {
-  const token = req.headers.authorization?.split('Bearer ')[1];
+export const verifyJwt = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const token = req.headers.authorization?.split("Bearer ")[1];
   if (!token) {
-    res.status(401).json({ error: 'No token provided' });
+    res.status(401).json({ error: "No token provided" });
     return;
   }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-    if (typeof decoded === 'string') {
-      res.status(401).json({ error: 'Invalid JWT format' });
+    if (typeof decoded === "string") {
+      res.status(401).json({ error: "Invalid JWT format" });
       return;
     }
 
@@ -32,6 +36,6 @@ export const verifyJwt = (req: Request, res: Response, next: NextFunction): void
     req.user = { id: payload.sub, email: payload.email };
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Invalid JWT' });
+    res.status(401).json({ error: "Invalid JWT" });
   }
 };

@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1745500138690,
-      "tag": "0000_lowly_vanisher",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1745503151555,
-      "tag": "0001_nosy_ozymandias",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1745578478505,
-      "tag": "0002_tired_selene",
+      "when": 1747794025906,
+      "tag": "0000_groovy_bloodscream",
       "breakpoints": true
     }
   ]

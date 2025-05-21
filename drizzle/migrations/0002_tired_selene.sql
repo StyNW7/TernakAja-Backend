@@ -1,1 +1,0 @@
-ALTER TABLE "users" ALTER COLUMN "farm_id" SET DATA TYPE integer;

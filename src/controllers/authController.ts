@@ -1,16 +1,16 @@
-import { Request, Response } from 'express';
-import bcrypt from 'bcrypt';
-import { db } from '../db/drizzle';
-import { usersTable } from '../db/schema';
-import { eq } from 'drizzle-orm';
-import { generateSessionJwt } from '../utils/jwt';
+import { Request, Response } from "express";
+import bcrypt from "bcrypt";
+import { db } from "../db/drizzle";
+import { usersTable } from "../db/schema";
+import { eq } from "drizzle-orm";
+import { generateSessionJwt } from "../utils/jwt";
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password, name, role } = req.body;
 
     if (!email || !password || !name || !role) {
-      res.status(400).json({ error: 'All fields are required' });
+      res.status(400).json({ error: "All fields are required" });
       return;
     }
 
@@ -22,7 +22,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       .limit(1);
 
     if (existingUser.length > 0) {
-      res.status(400).json({ error: 'User already exists' });
+      res.status(400).json({ error: "User already exists" });
       return;
     }
 
@@ -40,18 +40,21 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       })
       .returning();
 
-    const sessionJwt = generateSessionJwt({ id: user[0].id, email: user[0].email });
+    const sessionJwt = generateSessionJwt({
+      id: user[0].id,
+      email: user[0].email,
+    });
 
     const { password: _, ...userWithoutPassword } = user[0];
 
     res.status(201).json({
-      message: 'User registered successfully',
+      message: "User registered successfully",
       user: userWithoutPassword,
       token: sessionJwt,
     });
   } catch (error) {
-    console.error('Register error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Register error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -60,7 +63,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      res.status(400).json({ error: 'Email and password are required' });
+      res.status(400).json({ error: "Email and password are required" });
       return;
     }
 
@@ -72,13 +75,13 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     const user = users[0];
     if (!user) {
-      res.status(401).json({ error: 'Invalid email or password' });
+      res.status(401).json({ error: "Invalid email or password" });
       return;
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      res.status(401).json({ error: 'Invalid email or password' });
+      res.status(401).json({ error: "Invalid email or password" });
       return;
     }
 
@@ -86,27 +89,31 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const { password: _, ...userWithoutPassword } = user;
 
     res.json({
-      message: 'Login successful',
+      message: "Login successful",
       user: userWithoutPassword,
       token: sessionJwt,
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
-export const getProfile = async (req: Request, res: Response): Promise<void> => {
+export const getProfile = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { id } = req.params;
   try {
     const users = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.id, req.user!.id))
+      .where(eq(usersTable.id, parseInt(id)))
       .limit(1);
 
     const user = users[0];
     if (!user) {
-      res.status(404).json({ error: 'User not found' });
+      res.status(404).json({ error: "User not found" });
       return;
     }
 
@@ -114,7 +121,7 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
 
     res.json({ user: userWithoutPassword });
   } catch (error) {
-    console.error('Profile error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Profile error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
