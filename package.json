@@ -33,7 +33,11 @@
     "drizzle-orm": "^0.42.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+<<<<<<< Updated upstream
     "neonpg": "^0.0.1",
+=======
+    "pg": "^8.16.0",
+>>>>>>> Stashed changes
     "ws": "^8.18.1"
   },
   "devDependencies": {
