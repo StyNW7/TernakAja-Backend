@@ -35,7 +35,7 @@ export const getRecentNotifications = async (
   
       res.json({
         message: 'Recent notifications retrieved successfully',
-        notifications: result,
+        data: result,
       });
     } catch (error) {
       console.error('Get recent notifications error:', error);

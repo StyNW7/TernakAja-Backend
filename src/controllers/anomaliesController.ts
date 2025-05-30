@@ -45,7 +45,7 @@ export const getAnomaliesData = async (
 
     res.json({
       message: "Anomalies data retrieved successfully",
-      anomalies: anomaliesData[0] || null, // Return null if no record exists
+      data: anomaliesData[0] || null, // Return null if no record exists
     });
   } catch (error) {
     console.error("Get anomalies data error:", error);
@@ -138,7 +138,7 @@ export const updateAnomaliesData = async (
 
     res.json({
       message: "Anomaly data updated successfully",
-      anomaly: updatedAnomaly,
+      data: updatedAnomaly,
     });
   } catch (error) {
     console.error("Update anomaly data error:", error);

@@ -35,7 +35,7 @@ const router = Router();
 // Auth routes
 router.post("/register", register);
 router.post("/login", login);
-router.get("/profile/:id", verifyJwt, getProfile);
+router.get("/profile", verifyJwt, getProfile);
 
 // Farm routes
 router.post("/farms", verifyJwt, createFarm);

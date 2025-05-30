@@ -103,7 +103,7 @@ export const createLivestock = async (
 
     res.status(201).json({
       message: "Livestock and related records created successfully",
-      livestock: result,
+      data: result,
     });
   } catch (error) {
     console.error("Create livestock error:", error);
@@ -124,7 +124,7 @@ export const getAllLivestock = async (
 
     res.json({
       message: "Livestock retrieved successfully",
-      livestock,
+      data: livestock,
     });
   } catch (error) {
     console.error("Get livestock error:", error);
@@ -160,7 +160,7 @@ export const getLivestockById = async (
 
     res.json({
       message: "Livestock retrieved successfully",
-      livestock: livestock[0],
+      data: livestock[0],
     });
   } catch (error) {
     console.error("Get livestock by ID error:", error);
@@ -260,7 +260,7 @@ export const updateLivestock = async (
 
     res.json({
       message: "Livestock updated successfully",
-      livestock: updatedLivestock[0],
+      data: updatedLivestock[0],
     });
   } catch (error) {
     console.error("Update livestock error:", error);
@@ -330,7 +330,7 @@ export const getLivestockStatusCounts = async (
 
     res.json({
       message: 'Livestock status counts retrieved successfully',
-      counts: result[0],
+      data: result[0],
     });
   } catch (error) {
     console.error('Get livestock status counts error:', error);
@@ -362,7 +362,7 @@ export const getLivestockSpeciesCounts = async (
 
     res.json({
       message: 'Livestock species counts retrieved successfully',
-      speciesCounts: result,
+      data: result,
     });
   } catch (error) {
     console.error('Get livestock species counts error:', error);

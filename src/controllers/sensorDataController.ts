@@ -45,7 +45,7 @@ export const getSensorData = async (
 
     res.json({
       message: "Sensor data retrieved successfully",
-      sensorData: sensorData[0] || null, // Return null if no record exists
+      data: sensorData[0] || null, // Return null if no record exists
     });
   } catch (error) {
     console.error("Get sensor data error:", error);
@@ -136,7 +136,7 @@ export const updateSensorData = async (
 
     res.json({
       message: "Sensor data updated successfully",
-      sensorData: updatedSensorData,
+      data: updatedSensorData,
     });
   } catch (error) {
     console.error("Update sensor data error:", error);
@@ -175,7 +175,7 @@ export const getLivestockSensorAverages = async (
 
     res.json({
       message: 'Livestock sensor averages retrieved successfully',
-      sensorAverages: result,
+      data: result,
     });
   } catch (error) {
     console.error('Get livestock sensor averages error:', error);

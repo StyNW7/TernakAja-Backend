@@ -32,7 +32,7 @@ export const createFarm = async (
 
     res.status(201).json({
       message: "Farm created successfully",
-      farm: newFarm[0],
+      data: newFarm[0],
     });
   } catch (error) {
     console.error("Create farm error:", error);
@@ -53,7 +53,7 @@ export const getAllFarms = async (
 
     res.json({
       message: "Farms retrieved successfully",
-      farms,
+      data: farms,
     });
   } catch (error) {
     console.error("Get farms error:", error);
@@ -93,7 +93,7 @@ export const getFarmById = async (
 
     res.json({
       message: "Farm retrieved successfully",
-      farm: farm[0],
+      data: farm[0],
     });
   } catch (error) {
     console.error("Get farm by ID error:", error);
@@ -147,7 +147,7 @@ export const updateFarm = async (
 
     res.json({
       message: "Farm updated successfully",
-      farm: updatedFarm[0],
+      data: updatedFarm[0],
     });
   } catch (error) {
     console.error("Update farm error:", error);

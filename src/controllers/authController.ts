@@ -103,12 +103,19 @@ export const getProfile = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { id } = req.params;
+  // const { id } = req.params;
+  const id = req.user?.id;
+
+  if (!id) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
   try {
     const users = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.id, parseInt(id)))
+      .where(eq(usersTable.id, id))
       .limit(1);
 
     const user = users[0];
