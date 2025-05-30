@@ -6,7 +6,7 @@ import {
   sensorDataTable,
   anomaliesTable,
 } from "../db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 // Create a new livestock
 export const createLivestock = async (
@@ -302,5 +302,202 @@ export const deleteLivestock = async (
   } catch (error) {
     console.error("Delete livestock error:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getLivestockStatusCounts = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = Number(req.params.userId);
+
+    const result = await db
+      .select({
+        total: sql`COUNT(*)`.as('total'),
+        healthy: sql`SUM(CASE WHEN ${livestockTable.status} = 'Healthy' THEN 1 ELSE 0 END)`.as('healthy'),
+        needs_attention: sql`SUM(CASE WHEN ${livestockTable.status} = 'Needs Attention' THEN 1 ELSE 0 END)`.as('needs_attention'),
+        critical: sql`SUM(CASE WHEN ${livestockTable.status} = 'Critical' THEN 1 ELSE 0 END)`.as('critical'),
+      })
+      .from(livestockTable)
+      .where(eq(livestockTable.userId, userId))
+      .limit(1);
+
+    if (!result.length) {
+      res.status(404).json({ error: 'No livestock found for this user' });
+      return;
+    }
+
+    res.json({
+      message: 'Livestock status counts retrieved successfully',
+      counts: result[0],
+    });
+  } catch (error) {
+    console.error('Get livestock status counts error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getLivestockSpeciesCounts = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = Number(req.params.userId);
+
+    const result = await db
+      .select({
+        species: livestockTable.species,
+        total: sql`COUNT(*)`.as('total'),
+      })
+      .from(livestockTable)
+      .where(eq(livestockTable.userId, userId))
+      .groupBy(livestockTable.species)
+      .orderBy(sql`COUNT(*) DESC`);
+
+    if (!result.length) {
+      res.status(404).json({ error: 'No livestock found for this user' });
+      return;
+    }
+
+    res.json({
+      message: 'Livestock species counts retrieved successfully',
+      speciesCounts: result,
+    });
+  } catch (error) {
+    console.error('Get livestock species counts error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getLivestockSensorAnomalies = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = Number(req.params.userId);
+
+    const result = await db
+      .select({
+        sensor_data: {
+          livestockId: sensorDataTable.livestockId,
+          temperature: sensorDataTable.temperature,
+          heartRate: sensorDataTable.heartRate,
+          motionLevel: sensorDataTable.motionLevel,
+          timestamp: sensorDataTable.timestamp,
+        },
+        livestock: {
+          id: livestockTable.id,
+          farmId: livestockTable.farmId,
+          userId: livestockTable.userId,
+          name: livestockTable.name,
+          species: livestockTable.species,
+          breed: livestockTable.breed,
+          gender: livestockTable.gender,
+          birthDate: livestockTable.birthDate,
+          photoUrl: livestockTable.photoUrl,
+          status: livestockTable.status,
+          height: livestockTable.height,
+          weight: livestockTable.weight,
+          bodyConditionScore: livestockTable.bodyConditionScore,
+          notes: livestockTable.notes,
+          recordedAt: livestockTable.recordedAt,
+          createdAt: livestockTable.createdAt,
+          updatedAt: livestockTable.updatedAt,
+        },
+        anomaly: {
+          livestockId: anomaliesTable.livestockId,
+          type: anomaliesTable.type,
+          severity: anomaliesTable.severity,
+          notes: anomaliesTable.notes,
+          detectedAt: anomaliesTable.detectedAt,
+          resolved: anomaliesTable.resolved,
+        },
+      })
+      .from(sensorDataTable)
+      .innerJoin(livestockTable, eq(sensorDataTable.livestockId, livestockTable.id))
+      .innerJoin(anomaliesTable, eq(anomaliesTable.livestockId, livestockTable.id))
+      .where(eq(livestockTable.userId, userId));
+
+    if (!result.length) {
+      res.status(404).json({ error: 'No sensor data or anomalies found for this user' });
+      return;
+    }
+
+    res.json({
+      message: 'Livestock sensor data and anomalies retrieved successfully',
+      data: result,
+    });
+  } catch (error) {
+    console.error('Get livestock sensor data and anomalies error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getLivestockSensorAnomaliesById = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const livestockId = Number(req.params.livestockId);
+
+    const result = await db
+      .select({
+        sensor_data: {
+          livestockId: sensorDataTable.livestockId,
+          temperature: sensorDataTable.temperature,
+          heartRate: sensorDataTable.heartRate,
+          motionLevel: sensorDataTable.motionLevel,
+          timestamp: sensorDataTable.timestamp,
+        },
+        livestock: {
+          id: livestockTable.id,
+          farmId: livestockTable.farmId,
+          userId: livestockTable.userId,
+          name: livestockTable.name,
+          species: livestockTable.species,
+          breed: livestockTable.breed,
+          gender: livestockTable.gender,
+          birthDate: livestockTable.birthDate,
+          photoUrl: livestockTable.photoUrl,
+          status: livestockTable.status,
+          height: livestockTable.height,
+          weight: livestockTable.weight,
+          bodyConditionScore: livestockTable.bodyConditionScore,
+          notes: livestockTable.notes,
+          recordedAt: livestockTable.recordedAt,
+          createdAt: livestockTable.createdAt,
+          updatedAt: livestockTable.updatedAt,
+        },
+        anomaly: {
+          livestockId: anomaliesTable.livestockId,
+          type: anomaliesTable.type,
+          severity: anomaliesTable.severity,
+          notes: anomaliesTable.notes,
+          detectedAt: anomaliesTable.detectedAt,
+          resolved: anomaliesTable.resolved,
+        },
+      })
+      .from(sensorDataTable)
+      .innerJoin(livestockTable, eq(sensorDataTable.livestockId, livestockTable.id))
+      .innerJoin(anomaliesTable, eq(anomaliesTable.livestockId, livestockTable.id))
+      .where(
+        and(
+          eq(livestockTable.id, livestockId)
+        )
+      );
+
+    if (!result.length) {
+      res.status(404).json({ error: 'No sensor data or anomalies found for this livestock or you do not have access' });
+      return;
+    }
+
+    res.json({
+      message: 'Livestock sensor data and anomalies retrieved successfully',
+      data: result,
+    });
+  } catch (error) {
+    console.error('Get livestock sensor data and anomalies by ID error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
