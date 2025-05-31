@@ -1,7 +1,14 @@
 import { Request, Response } from "express";
 import { db } from "../db/drizzle";
 import { sensorDataTable, livestockTable } from "../db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, gte } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
+
+interface SensorAverages {
+  avgHeartRate: number;
+  avgTemperature: number;
+  avgMotionLevel: number;
+}
 
 // Fetch the latest sensor data by livestock ID
 export const getLatestSensorData = async (
@@ -172,5 +179,70 @@ export const createSensorData = async (
   } catch (error) {
     console.error("Create sensor data error:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getSensorAverages = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = Number(req.params.userId);
+
+    if (isNaN(userId)) {
+      res.status(400).json({ error: 'Invalid user ID' });
+      return;
+    }
+
+    // Verify user exists
+    const user = await db
+      .select()
+      .from(livestockTable)
+      .where(eq(livestockTable.userId, userId))
+      .limit(1);
+
+    if (!user.length) {
+      res.status(404).json({ error: 'User not found or no livestock associated' });
+      return;
+    }
+
+    // Define aliases for tables
+    const sd = alias(sensorDataTable, 'sd');
+    const l = alias(livestockTable, 'l');
+
+    // Fetch sensor data averages
+    const result = await db
+      .select({
+        avgHeartRate: sql<number>`AVG(${sd.heartRate})`.as('avg_heart_rate'),
+        avgTemperature: sql<number>`AVG(${sd.temperature})`.as('avg_temperature'),
+        avgMotionLevel: sql<number>`AVG(${sd.motionLevel})`.as('avg_motion_level'),
+      })
+      .from(sd)
+      .innerJoin(l, eq(sd.livestockId, l.id))
+      .where(
+        and(
+          eq(l.userId, userId),
+          gte(sd.timestamp, sql`NOW() - INTERVAL '1 hour'`)
+        )
+      );
+
+    if (!result.length || result[0].avgHeartRate === null) {
+      res.status(404).json({ error: 'No sensor data found for the user in the last hour' });
+      return;
+    }
+
+    const averages: SensorAverages = {
+      avgHeartRate: result[0].avgHeartRate,
+      avgTemperature: result[0].avgTemperature,
+      avgMotionLevel: result[0].avgMotionLevel,
+    };
+
+    res.json({
+      message: 'Sensor data averages retrieved successfully',
+      data: averages,
+    });
+  } catch (error) {
+    console.error('Get sensor averages error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
