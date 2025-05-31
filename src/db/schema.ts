@@ -59,8 +59,9 @@ export const livestockTable = pgTable("livestock", {
 });
 
 export const sensorDataTable = pgTable("sensor_data", {
+  id: serial("id").primaryKey(),
   livestockId: integer("livestock_id")
-    .primaryKey()
+    .notNull()
     .references(() => livestockTable.id, { onDelete: "cascade" }),
   temperature: real("temperature"),
   heartRate: integer("heart_rate"),
