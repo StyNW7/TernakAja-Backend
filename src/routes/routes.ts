@@ -6,8 +6,8 @@ import {
   deleteLivestock,
   getAllLivestock,
   getLivestockById,
-  getLivestockSensorAnomalies,
-  getLivestockSensorAnomaliesById,
+  getLivestockSensorData,
+  getLivestockSensorDataById,
   getLivestockSpeciesCounts,
   getLivestockStatusCounts,
   updateLivestock,
@@ -20,15 +20,18 @@ import {
   updateFarm,
 } from "../controllers/farmController";
 import {
-  getLivestockSensorAverages,
-  getSensorData,
-  updateSensorData,
+  createSensorData,
+  getLatestSensorData,
+  getSensorDataHistory,
 } from "../controllers/sensorDataController";
 import {
   getAnomaliesData,
   updateAnomaliesData,
 } from "../controllers/anomaliesController";
-import { getNotificationsWithLivestockAndSensorData, getRecentNotifications } from "../controllers/notificationsController";
+import {
+  getNotificationsWithLivestockAndSensorData,
+  getRecentNotifications,
+} from "../controllers/notificationsController";
 
 const router = Router();
 
@@ -51,23 +54,46 @@ router.get("/livestock/:id", verifyJwt, getLivestockById);
 router.put("/livestock/:id", verifyJwt, updateLivestock);
 router.delete("/livestock/:id", verifyJwt, deleteLivestock);
 
-router.get("/livestock/:userId/status-counts", verifyJwt, getLivestockStatusCounts);
-router.get("/livestock/:userId/species-counts", verifyJwt, getLivestockSpeciesCounts);
-router.get("/livestock/:userId/sensor-anomalies", verifyJwt, getLivestockSensorAnomalies);
-router.get("/livestock/:livestockId/detail", verifyJwt, getLivestockSensorAnomaliesById);
+router.get(
+  "/livestock/:userId/status-counts",
+  verifyJwt,
+  getLivestockStatusCounts
+);
+router.get(
+  "/livestock/:userId/species-counts",
+  verifyJwt,
+  getLivestockSpeciesCounts
+);
+router.get("/livestock/:userId/sensor-data", verifyJwt, getLivestockSensorData);
+router.get(
+  "/livestock/:livestockId/detail",
+  verifyJwt,
+  getLivestockSensorDataById
+);
 
 // Sensor Data routes
-router.get("/livestock/:id/sensor-data", verifyJwt, getSensorData);
-router.put("/livestock/:id/sensor-data", verifyJwt, updateSensorData);
-
-router.get("/livestock/:userId/avg-metrics-seven-day", verifyJwt, getLivestockSensorAverages);
+router.get("/livestock/:id/sensor-data/latest", verifyJwt, getLatestSensorData);
+router.get(
+  "/livestock/:id/sensor-data/history",
+  verifyJwt,
+  getSensorDataHistory
+);
+router.post("/livestock/:id/sensor-data", verifyJwt, createSensorData);
 
 // Anomalies routes
 router.get("/livestock/:id/anomalies", verifyJwt, getAnomaliesData);
 router.put("/livestock/:id/anomalies", verifyJwt, updateAnomaliesData);
 
 // Notifications routes
-router.get("/livestock/:userId/recent-notifs", verifyJwt, getRecentNotifications);
-router.get("/livestock/:userId/notif-detail", verifyJwt, getNotificationsWithLivestockAndSensorData);
+router.get(
+  "/livestock/:userId/recent-notifs",
+  verifyJwt,
+  getRecentNotifications
+);
+router.get(
+  "/livestock/:userId/notif-detail",
+  verifyJwt,
+  getNotificationsWithLivestockAndSensorData
+);
 
 export default router;
