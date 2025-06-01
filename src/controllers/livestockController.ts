@@ -60,20 +60,6 @@ export const createLivestock = async (
       return;
     }
 
-    // Verify that the farm exists and belongs to the user
-    const farm = await db
-      .select()
-      .from(farmsTable)
-      .where(and(eq(farmsTable.id, farmId), eq(farmsTable.userId, userId)))
-      .limit(1);
-
-    if (!farm.length) {
-      res
-        .status(403)
-        .json({ error: "Farm not found or you do not have access" });
-      return;
-    }
-
     // Placeholder for Azure IoT Hub device registration
     // TODO: Implement logic to register new device with Azure IoT Hub
     // const azureDevice = await registerDeviceToAzureIoTHub(deviceId, deviceType, firmware, wifiSsid, wifiPassword);
@@ -409,7 +395,7 @@ export const getLivestockSensorData = async (
 ): Promise<void> => {
   try {
     const userId = Number(req.params.userId);
-
+    // console.log(userId);
     // Validate userId
     if (isNaN(userId)) {
       res.status(400).json({ error: "Invalid user ID" });
