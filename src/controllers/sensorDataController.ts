@@ -7,7 +7,7 @@ import { alias } from "drizzle-orm/pg-core";
 interface SensorAverages {
   avgHeartRate: number;
   avgTemperature: number;
-  avgMotionLevel: number;
+  avgRespiratoryRate: number;
 }
 
 // Fetch the latest sensor data by livestock ID
@@ -120,7 +120,7 @@ export const createSensorData = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const { temperature, heartRate, motionLevel, timestamp } = req.body;
+    const { temperature, heartRate, respiratoryRate, timestamp } = req.body;
 
     // Validate livestockId
     const livestockId = parseInt(id);
@@ -133,10 +133,10 @@ export const createSensorData = async (
     if (
       temperature === undefined ||
       heartRate === undefined ||
-      motionLevel === undefined
+      respiratoryRate === undefined
     ) {
       res.status(400).json({
-        error: "Temperature, heart rate, and motion level are required",
+        error: "Temperature, heart rate, and respiratory rate are required",
       });
       return;
     }
@@ -167,7 +167,7 @@ export const createSensorData = async (
         livestockId,
         temperature,
         heartRate,
-        motionLevel,
+        respiratoryRate,
         timestamp: timestamp ? new Date(timestamp) : new Date(),
       })
       .returning();
@@ -215,7 +215,7 @@ export const getSensorAverages = async (
       .select({
         avgHeartRate: sql<number>`AVG(${sd.heartRate})`.as('avg_heart_rate'),
         avgTemperature: sql<number>`AVG(${sd.temperature})`.as('avg_temperature'),
-        avgMotionLevel: sql<number>`AVG(${sd.motionLevel})`.as('avg_motion_level'),
+        avgRespiratoryRate: sql<number>`AVG(${sd.respiratoryRate})`.as('avg_respiratory_rate'),
       })
       .from(sd)
       .innerJoin(l, eq(sd.livestockId, l.id))
@@ -234,7 +234,7 @@ export const getSensorAverages = async (
     const averages: SensorAverages = {
       avgHeartRate: result[0].avgHeartRate,
       avgTemperature: result[0].avgTemperature,
-      avgMotionLevel: result[0].avgMotionLevel,
+      avgRespiratoryRate: result[0].avgRespiratoryRate,
     };
 
     res.json({

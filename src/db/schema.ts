@@ -65,7 +65,7 @@ export const sensorDataTable = pgTable("sensor_data", {
     .references(() => livestockTable.id, { onDelete: "cascade" }),
   temperature: real("temperature"),
   heartRate: integer("heart_rate"),
-  motionLevel: real("motion_level"),
+  respiratoryRate: real("respiratory_rate"),
   timestamp: timestamp("timestamp"),
 });
 
