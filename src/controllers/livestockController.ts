@@ -428,7 +428,7 @@ export const getLivestockSensorData = async (
         livestockId: sensorDataTable.livestockId,
         temperature: sensorDataTable.temperature,
         heartRate: sensorDataTable.heartRate,
-        motionLevel: sensorDataTable.respiratoryRate,
+        respiratoryRate: sensorDataTable.respiratoryRate,
         timestamp: sensorDataTable.timestamp,
         row_number:
           sql`ROW_NUMBER() OVER (PARTITION BY ${sensorDataTable.livestockId} ORDER BY ${sensorDataTable.timestamp} DESC)`.as(
@@ -445,7 +445,7 @@ export const getLivestockSensorData = async (
           livestockId: latestSensorData.livestockId,
           temperature: latestSensorData.temperature,
           heartRate: latestSensorData.heartRate,
-          motionLevel: latestSensorData.motionLevel,
+          respiratoryRate: latestSensorData.respiratoryRate,
           timestamp: latestSensorData.timestamp,
         },
         livestock: {
@@ -515,7 +515,7 @@ export const getLivestockSensorDataById = async (
         livestockId: sensorDataTable.livestockId,
         temperature: sensorDataTable.temperature,
         heartRate: sensorDataTable.heartRate,
-        motionLevel: sensorDataTable.respiratoryRate,
+        respiratoryRate: sensorDataTable.respiratoryRate,
         timestamp: sensorDataTable.timestamp,
         row_number:
           sql`ROW_NUMBER() OVER (PARTITION BY ${sensorDataTable.livestockId} ORDER BY ${sensorDataTable.timestamp} DESC)`.as(
@@ -533,7 +533,7 @@ export const getLivestockSensorDataById = async (
           livestockId: latestSensorData.livestockId,
           temperature: latestSensorData.temperature,
           heartRate: latestSensorData.heartRate,
-          motionLevel: latestSensorData.motionLevel,
+          respiratoryRate: latestSensorData.respiratoryRate,
           timestamp: latestSensorData.timestamp,
         },
         livestock: {
