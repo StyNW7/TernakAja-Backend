@@ -85,7 +85,7 @@ export const devicesTable = pgTable("devices", {
   livestockId: integer("livestock_id")
     .notNull()
     .references(() => livestockTable.id, { onDelete: "cascade" }),
-  deviceId: text("device_id").notNull().unique(), // Azure IoT Hub DeviceId
+  deviceId: integer("device_id").notNull().unique(), // Azure IoT Hub DeviceId
   deviceType: text("device_type").notNull(), // e.g., 'collar-v1'
   firmware: text("firmware").notNull(), // e.g., 'latest'
   wifiSsid: text("wifi_ssid"), // Optional Wi-Fi SSID
