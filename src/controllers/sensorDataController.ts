@@ -291,3 +291,48 @@ export const getLivestockSensorAveragesSevenDay = async (
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const getLivestockSensorAveragesSevenDayById = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const livestockId = Number(req.params.id);
+
+    const result = await db
+      .select({
+        day: sql`DATE(${sensorDataTable.timestamp})`.as('day'),
+        avg_temperature: sql`AVG(${sensorDataTable.temperature})`.as('avg_temperature'),
+        avg_heart_rate: sql`AVG(${sensorDataTable.heartRate})`.as('avg_heart_rate'),
+      })
+      .from(sensorDataTable)
+      .innerJoin(livestockTable, eq(sensorDataTable.livestockId, livestockTable.id))
+      .where(
+        and(
+          eq(livestockTable.id, livestockId),
+          gte(sensorDataTable.timestamp, sql`CURRENT_DATE - INTERVAL '6 days'`)
+        )
+      )
+      .groupBy(sql`DATE(${sensorDataTable.timestamp})`)
+      .orderBy(sql`DATE(${sensorDataTable.timestamp}) DESC`);
+
+    if (!result.length) {
+      res.status(404).json({ error: 'No sensor data found for this livestock in the last 7 days' });
+      return;
+    }
+
+    const formattedResult = result.map(row => ({
+      day: row.day,
+      avg_temperature: Number(row.avg_temperature),
+      avg_heart_rate: Number(row.avg_heart_rate),
+    }));
+
+    res.json({
+      message: 'Livestock sensor averages retrieved successfully',
+      data: formattedResult,
+    });
+  } catch (error) {
+    console.error('Get livestock sensor averages error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
