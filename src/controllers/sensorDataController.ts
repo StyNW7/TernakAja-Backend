@@ -276,9 +276,15 @@ export const getLivestockSensorAveragesSevenDay = async (
       return;
     }
 
+    const formattedResult = result.map(row => ({
+      day: row.day,
+      avg_temperature: Number(row.avg_temperature),
+      avg_heart_rate: Number(row.avg_heart_rate),
+    }));
+
     res.json({
       message: 'Livestock sensor averages retrieved successfully',
-      data: result,
+      data: formattedResult,
     });
   } catch (error) {
     console.error('Get livestock sensor averages error:', error);
