@@ -22,6 +22,7 @@ import {
 import {
   createSensorData,
   getLatestSensorData,
+  getLivestockSensorAveragesSevenDay,
   getSensorAverages,
   getSensorDataHistory,
 } from "../controllers/sensorDataController";
@@ -81,6 +82,7 @@ router.get(
 );
 router.post("/livestock/:id/sensor-data", verifyJwt, createSensorData);
 router.get("/livestock/:userId/sensor-data/average-recent", verifyJwt, getSensorAverages);
+router.get("/livestock/:userId/sensor-data/seven-day-average", verifyJwt, getLivestockSensorAveragesSevenDay);
 
 // Anomalies routes
 router.get("/livestock/:id/anomalies", verifyJwt, getAnomaliesData);

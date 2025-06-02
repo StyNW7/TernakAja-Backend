@@ -246,3 +246,42 @@ export const getSensorAverages = async (
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const getLivestockSensorAveragesSevenDay = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = Number(req.params.userId);
+
+    const result = await db
+      .select({
+        day: sql`DATE(${sensorDataTable.timestamp})`.as('day'),
+        avg_temperature: sql`AVG(${sensorDataTable.temperature})`.as('avg_temperature'),
+        avg_heart_rate: sql`AVG(${sensorDataTable.heartRate})`.as('avg_heart_rate'),
+      })
+      .from(sensorDataTable)
+      .innerJoin(livestockTable, eq(sensorDataTable.livestockId, livestockTable.id))
+      .where(
+        and(
+          eq(livestockTable.userId, userId),
+          gte(sensorDataTable.timestamp, sql`CURRENT_DATE - INTERVAL '6 days'`)
+        )
+      )
+      .groupBy(sql`DATE(${sensorDataTable.timestamp})`)
+      .orderBy(sql`DATE(${sensorDataTable.timestamp}) DESC`);
+
+    if (!result.length) {
+      res.status(404).json({ error: 'No sensor data found for this user in the last 7 days' });
+      return;
+    }
+
+    res.json({
+      message: 'Livestock sensor averages retrieved successfully',
+      data: result,
+    });
+  } catch (error) {
+    console.error('Get livestock sensor averages error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
