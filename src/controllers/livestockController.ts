@@ -8,6 +8,15 @@ import {
 } from "../db/schema";
 import { eq, and, sql } from "drizzle-orm";
 
+const toTitleCase = (
+  str: string | null | undefined
+): string | null | undefined => {
+  if (!str) return str; // Handle empty, null, or undefined strings
+  return str
+    .toLowerCase()
+    .replace(/(^|\s)\w/g, (letter) => letter.toUpperCase());
+};
+
 // Create a new livestock
 export const createLivestock = async (
   req: Request,
@@ -74,7 +83,7 @@ export const createLivestock = async (
           farmId,
           userId,
           name,
-          species,
+          species: toTitleCase(species),
           breed,
           gender,
           birthDate,
