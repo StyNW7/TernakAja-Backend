@@ -4,9 +4,18 @@ import {
   livestockTable,
   farmsTable,
   sensorDataTable,
-  anomaliesTable,
+  devicesTable,
 } from "../db/schema";
 import { eq, and, sql } from "drizzle-orm";
+
+const toTitleCase = (
+  str: string | null | undefined
+): string | null | undefined => {
+  if (!str) return str; // Handle empty, null, or undefined strings
+  return str
+    .toLowerCase()
+    .replace(/(^|\s)\w/g, (letter) => letter.toUpperCase());
+};
 
 // Create a new livestock
 export const createLivestock = async (
@@ -15,7 +24,13 @@ export const createLivestock = async (
 ): Promise<void> => {
   try {
     const {
+      userId,
       farmId,
+      deviceId,
+      deviceType,
+      firmware,
+      wifiSsid,
+      wifiPassword,
       name,
       species,
       breed,
@@ -31,39 +46,44 @@ export const createLivestock = async (
     } = req.body;
 
     // Validate required fields
-    if (!farmId || !name || !species) {
-      res
-        .status(400)
-        .json({ error: "Farm ID, name, and species are required" });
+    if (
+      !userId ||
+      !farmId ||
+      !deviceId ||
+      !deviceType ||
+      !firmware ||
+      !name ||
+      !species ||
+      !breed ||
+      !gender ||
+      !birthDate ||
+      !status ||
+      !height ||
+      !weight ||
+      !bodyConditionScore
+    ) {
+      res.status(400).json({
+        error:
+          "Missing required fields: userId, farmId, deviceId, deviceType, firmware, name, species, breed, gender, birthDate, status, height, weight, bodyConditionScore",
+      });
       return;
     }
 
-    // Verify that the farm exists and belongs to the user
-    const farm = await db
-      .select()
-      .from(farmsTable)
-      .where(
-        and(eq(farmsTable.id, farmId), eq(farmsTable.userId, req.user!.id))
-      )
-      .limit(1);
+    // Placeholder for Azure IoT Hub device registration
+    // TODO: Implement logic to register new device with Azure IoT Hub
+    // const azureDevice = await registerDeviceToAzureIoTHub(deviceId, deviceType, firmware, wifiSsid, wifiPassword);
+    // const connectionString = azureDevice.connectionString; // Example field to store
 
-    if (!farm.length) {
-      res
-        .status(403)
-        .json({ error: "Farm not found or you do not have access" });
-      return;
-    }
-
-    // Start a transaction to insert livestock and related records
+    // Start a transaction to insert livestock and device
     const result = await db.transaction(async (tx) => {
-      // Insert livestock with all fields
+      // Insert livestock
       const [livestock] = await tx
         .insert(livestockTable)
         .values({
           farmId,
-          userId: req.user!.id,
+          userId,
           name,
-          species,
+          species: toTitleCase(species),
           breed,
           gender,
           birthDate,
@@ -79,30 +99,26 @@ export const createLivestock = async (
         })
         .returning();
 
-      // Insert empty sensor_data record with livestockId as primary key
-      await tx.insert(sensorDataTable).values({
-        livestockId: livestock.id,
-        temperature: null,
-        heartRate: null,
-        motionLevel: null,
-        timestamp: null,
-      });
+      // Insert device
+      const [device] = await tx
+        .insert(devicesTable)
+        .values({
+          livestockId: livestock.id,
+          deviceId,
+          deviceType,
+          firmware,
+          wifiSsid: wifiSsid || null,
+          wifiPassword: wifiPassword || null,
+          connectionString: null, // Placeholder: Set to null until Azure IoT Hub is implemented
+          lastOnline: null, // Placeholder: Set to null until device connects
+        })
+        .returning();
 
-      // Insert empty anomalies record with livestockId as primary key
-      await tx.insert(anomaliesTable).values({
-        livestockId: livestock.id,
-        type: null,
-        severity: null,
-        notes: null,
-        detectedAt: null,
-        resolved: null,
-      });
-
-      return livestock;
+      return { livestock, device };
     });
 
     res.status(201).json({
-      message: "Livestock and related records created successfully",
+      message: "Livestock and device created successfully",
       data: result,
     });
   } catch (error) {
@@ -305,6 +321,7 @@ export const deleteLivestock = async (
   }
 };
 
+// Get livestock status counts
 export const getLivestockStatusCounts = async (
   req: Request,
   res: Response
@@ -314,30 +331,40 @@ export const getLivestockStatusCounts = async (
 
     const result = await db
       .select({
-        total: sql`COUNT(*)`.as('total'),
-        healthy: sql`SUM(CASE WHEN ${livestockTable.status} = 'Healthy' THEN 1 ELSE 0 END)`.as('healthy'),
-        needs_attention: sql`SUM(CASE WHEN ${livestockTable.status} = 'Needs Attention' THEN 1 ELSE 0 END)`.as('needs_attention'),
-        critical: sql`SUM(CASE WHEN ${livestockTable.status} = 'Critical' THEN 1 ELSE 0 END)`.as('critical'),
+        total: sql`COUNT(*)`.as("total"),
+        healthy:
+          sql`SUM(CASE WHEN ${livestockTable.status} = 'Healthy' THEN 1 ELSE 0 END)`.as(
+            "healthy"
+          ),
+        needs_attention:
+          sql`SUM(CASE WHEN ${livestockTable.status} = 'Needs Attention' THEN 1 ELSE 0 END)`.as(
+            "needs_attention"
+          ),
+        critical:
+          sql`SUM(CASE WHEN ${livestockTable.status} = 'Critical' THEN 1 ELSE 0 END)`.as(
+            "critical"
+          ),
       })
       .from(livestockTable)
       .where(eq(livestockTable.userId, userId))
       .limit(1);
 
     if (!result.length) {
-      res.status(404).json({ error: 'No livestock found for this user' });
+      res.status(404).json({ error: "No livestock found for this user" });
       return;
     }
 
     res.json({
-      message: 'Livestock status counts retrieved successfully',
+      message: "Livestock status counts retrieved successfully",
       data: result[0],
     });
   } catch (error) {
-    console.error('Get livestock status counts error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Get livestock status counts error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
+// Get livestock species counts
 export const getLivestockSpeciesCounts = async (
   req: Request,
   res: Response
@@ -348,7 +375,7 @@ export const getLivestockSpeciesCounts = async (
     const result = await db
       .select({
         species: livestockTable.species,
-        total: sql`COUNT(*)`.as('total'),
+        total: sql`COUNT(*)`.as("total"),
       })
       .from(livestockTable)
       .where(eq(livestockTable.userId, userId))
@@ -356,35 +383,65 @@ export const getLivestockSpeciesCounts = async (
       .orderBy(sql`COUNT(*) DESC`);
 
     if (!result.length) {
-      res.status(404).json({ error: 'No livestock found for this user' });
+      res.status(404).json({ error: "No livestock found for this user" });
       return;
     }
 
     res.json({
-      message: 'Livestock species counts retrieved successfully',
+      message: "Livestock species counts retrieved successfully",
       data: result,
     });
   } catch (error) {
-    console.error('Get livestock species counts error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Get livestock species counts error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
-export const getLivestockSensorAnomalies = async (
+// Get livestock and latest sensor data
+export const getLivestockSensorData = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
     const userId = Number(req.params.userId);
+    // console.log(userId);
+    // Validate userId
+    if (isNaN(userId)) {
+      res.status(400).json({ error: "Invalid user ID" });
+      return;
+    }
+
+    // Ensure the userId matches the authenticated user
+    if (userId !== req.user!.id) {
+      res.status(403).json({ error: "Unauthorized access" });
+      return;
+    }
+
+    const latestSensorData = db
+      .select({
+        id: sensorDataTable.id,
+        livestockId: sensorDataTable.livestockId,
+        temperature: sensorDataTable.temperature,
+        heartRate: sensorDataTable.heartRate,
+        respiratoryRate: sensorDataTable.respiratoryRate,
+        timestamp: sensorDataTable.timestamp,
+        row_number:
+          sql`ROW_NUMBER() OVER (PARTITION BY ${sensorDataTable.livestockId} ORDER BY ${sensorDataTable.timestamp} DESC)`.as(
+            "rn"
+          ),
+      })
+      .from(sensorDataTable)
+      .as("latest_sensor_data");
 
     const result = await db
       .select({
         sensor_data: {
-          livestockId: sensorDataTable.livestockId,
-          temperature: sensorDataTable.temperature,
-          heartRate: sensorDataTable.heartRate,
-          motionLevel: sensorDataTable.motionLevel,
-          timestamp: sensorDataTable.timestamp,
+          id: latestSensorData.id,
+          livestockId: latestSensorData.livestockId,
+          temperature: latestSensorData.temperature,
+          heartRate: latestSensorData.heartRate,
+          respiratoryRate: latestSensorData.respiratoryRate,
+          timestamp: latestSensorData.timestamp,
         },
         livestock: {
           id: livestockTable.id,
@@ -405,50 +462,74 @@ export const getLivestockSensorAnomalies = async (
           createdAt: livestockTable.createdAt,
           updatedAt: livestockTable.updatedAt,
         },
-        anomaly: {
-          livestockId: anomaliesTable.livestockId,
-          type: anomaliesTable.type,
-          severity: anomaliesTable.severity,
-          notes: anomaliesTable.notes,
-          detectedAt: anomaliesTable.detectedAt,
-          resolved: anomaliesTable.resolved,
-        },
       })
-      .from(sensorDataTable)
-      .innerJoin(livestockTable, eq(sensorDataTable.livestockId, livestockTable.id))
-      .innerJoin(anomaliesTable, eq(anomaliesTable.livestockId, livestockTable.id))
+      .from(livestockTable)
+      .leftJoin(
+        latestSensorData,
+        and(
+          eq(latestSensorData.livestockId, livestockTable.id),
+          eq(latestSensorData.row_number, 1)
+        )
+      )
       .where(eq(livestockTable.userId, userId));
 
     if (!result.length) {
-      res.status(404).json({ error: 'No sensor data or anomalies found for this user' });
+      res.status(404).json({
+        error: "No livestock found for this user",
+      });
       return;
     }
 
     res.json({
-      message: 'Livestock sensor data and anomalies retrieved successfully',
+      message: "Livestock and latest sensor data retrieved successfully",
       data: result,
     });
   } catch (error) {
-    console.error('Get livestock sensor data and anomalies error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Get livestock and latest sensor data error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
-export const getLivestockSensorAnomaliesById = async (
+// Get livestock and latest sensor data by livestock ID
+export const getLivestockSensorDataById = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
     const livestockId = Number(req.params.livestockId);
 
+    // Validate livestockId
+    if (isNaN(livestockId)) {
+      res.status(400).json({ error: "Invalid livestock ID" });
+      return;
+    }
+
+    const latestSensorData = db
+      .select({
+        id: sensorDataTable.id,
+        livestockId: sensorDataTable.livestockId,
+        temperature: sensorDataTable.temperature,
+        heartRate: sensorDataTable.heartRate,
+        respiratoryRate: sensorDataTable.respiratoryRate,
+        timestamp: sensorDataTable.timestamp,
+        row_number:
+          sql`ROW_NUMBER() OVER (PARTITION BY ${sensorDataTable.livestockId} ORDER BY ${sensorDataTable.timestamp} DESC)`.as(
+            "rn"
+          ),
+      })
+      .from(sensorDataTable)
+      .where(eq(sensorDataTable.livestockId, livestockId))
+      .as("latest_sensor_data");
+
     const result = await db
       .select({
         sensor_data: {
-          livestockId: sensorDataTable.livestockId,
-          temperature: sensorDataTable.temperature,
-          heartRate: sensorDataTable.heartRate,
-          motionLevel: sensorDataTable.motionLevel,
-          timestamp: sensorDataTable.timestamp,
+          id: latestSensorData.id,
+          livestockId: latestSensorData.livestockId,
+          temperature: latestSensorData.temperature,
+          heartRate: latestSensorData.heartRate,
+          respiratoryRate: latestSensorData.respiratoryRate,
+          timestamp: latestSensorData.timestamp,
         },
         livestock: {
           id: livestockTable.id,
@@ -469,35 +550,35 @@ export const getLivestockSensorAnomaliesById = async (
           createdAt: livestockTable.createdAt,
           updatedAt: livestockTable.updatedAt,
         },
-        anomaly: {
-          livestockId: anomaliesTable.livestockId,
-          type: anomaliesTable.type,
-          severity: anomaliesTable.severity,
-          notes: anomaliesTable.notes,
-          detectedAt: anomaliesTable.detectedAt,
-          resolved: anomaliesTable.resolved,
-        },
       })
-      .from(sensorDataTable)
-      .innerJoin(livestockTable, eq(sensorDataTable.livestockId, livestockTable.id))
-      .innerJoin(anomaliesTable, eq(anomaliesTable.livestockId, livestockTable.id))
+      .from(livestockTable)
+      .leftJoin(
+        latestSensorData,
+        and(
+          eq(latestSensorData.livestockId, livestockTable.id),
+          eq(latestSensorData.row_number, 1)
+        )
+      )
       .where(
         and(
-          eq(livestockTable.id, livestockId)
+          eq(livestockTable.id, livestockId),
+          eq(livestockTable.userId, req.user!.id)
         )
       );
 
     if (!result.length) {
-      res.status(404).json({ error: 'No sensor data or anomalies found for this livestock or you do not have access' });
+      res.status(404).json({
+        error: "No livestock found for this ID or you do not have access",
+      });
       return;
     }
 
     res.json({
-      message: 'Livestock sensor data and anomalies retrieved successfully',
-      data: result,
+      message: "Livestock and latest sensor data retrieved successfully",
+      data: result[0], // Return the first (and only) result
     });
   } catch (error) {
-    console.error('Get livestock sensor data and anomalies by ID error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Get livestock and latest sensor data by ID error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };

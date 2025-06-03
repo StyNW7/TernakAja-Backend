@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import { db } from "../db/drizzle";
-import { usersTable } from "../db/schema";
+import { usersTable, farmsTable } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { generateSessionJwt } from "../utils/jwt";
 
@@ -29,26 +29,42 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
-    const user = await db
-      .insert(usersTable)
-      .values({
-        email,
-        password: hashedPassword,
-        name,
-        role,
-      })
-      .returning();
+    // Create user and farm in a transaction
+    const result = await db.transaction(async (tx) => {
+      // Create user
+      const [user] = await tx
+        .insert(usersTable)
+        .values({
+          email,
+          password: hashedPassword,
+          name,
+          role,
+        })
+        .returning();
 
-    const sessionJwt = generateSessionJwt({
-      id: user[0].id,
-      email: user[0].email,
+      // Create farm with same ID as user
+      await tx.insert(farmsTable).values({
+        id: user.id, // Set farm ID to match user ID
+        userId: user.id,
+        name: name,
+        location: "Indonesia",
+        address: `${name} Street`,
+        type: "medium",
+        createdAt: new Date(),
+      });
+
+      return user;
     });
 
-    const { password: _, ...userWithoutPassword } = user[0];
+    const sessionJwt = generateSessionJwt({
+      id: result.id,
+      email: result.email,
+    });
+
+    const { password: _, ...userWithoutPassword } = result;
 
     res.status(201).json({
-      message: "User registered successfully",
+      message: "User and farm registered successfully",
       user: userWithoutPassword,
       token: sessionJwt,
     });
@@ -103,7 +119,6 @@ export const getProfile = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  // const { id } = req.params;
   const id = req.user?.id;
 
   if (!id) {

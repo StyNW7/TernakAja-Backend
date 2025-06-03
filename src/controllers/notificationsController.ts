@@ -84,7 +84,7 @@ export const getRecentNotifications = async (
             livestockId: sensorDataTable.livestockId,
             temperature: sensorDataTable.temperature,
             heartRate: sensorDataTable.heartRate,
-            motionLevel: sensorDataTable.motionLevel,
+            respiratoryRate: sensorDataTable.respiratoryRate,
             timestamp: sensorDataTable.timestamp,
           },
         })

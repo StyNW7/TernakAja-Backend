@@ -65,7 +65,7 @@ export const sensorDataTable = pgTable("sensor_data", {
     .references(() => livestockTable.id, { onDelete: "cascade" }),
   temperature: real("temperature"),
   heartRate: integer("heart_rate"),
-  motionLevel: real("motion_level"),
+  respiratoryRate: real("respiratory_rate"),
   timestamp: timestamp("timestamp"),
 });
 
@@ -85,7 +85,13 @@ export const devicesTable = pgTable("devices", {
   livestockId: integer("livestock_id")
     .notNull()
     .references(() => livestockTable.id, { onDelete: "cascade" }),
-  lastOnline: timestamp("last_online"),
+  deviceId: integer("device_id").notNull().unique(), // Azure IoT Hub DeviceId
+  deviceType: text("device_type").notNull(), // e.g., 'collar-v1'
+  firmware: text("firmware").notNull(), // e.g., 'latest'
+  wifiSsid: text("wifi_ssid"), // Optional Wi-Fi SSID
+  wifiPassword: text("wifi_password"), // Optional Wi-Fi Password
+  connectionString: text("connection_string"), // Optional, secure IoT Hub connection string
+  lastOnline: timestamp("last_online"), // Tracks device activity
 });
 
 export const notificationsTable = pgTable("notifications", {
