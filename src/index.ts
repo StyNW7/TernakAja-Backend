@@ -14,10 +14,11 @@ dotenv.config();
 const app: Application = express();
 const port = process.env.PORT || 3000;
 const BACKEND_ADDR = process.env.BACKEND_ADDR || "";
+const AI_ADDR = process.env.AI_ADDR || "";
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:3000", BACKEND_ADDR, "http://172.178.82.251"],
+    origin: ["http://localhost:5173", "http://localhost:3000", BACKEND_ADDR, "http://172.178.82.251", AI_ADDR],
     credentials: true,
   })
 );
