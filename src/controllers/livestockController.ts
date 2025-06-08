@@ -11,13 +11,12 @@ import { eq, and, sql } from "drizzle-orm";
 const toTitleCase = (
   str: string | null | undefined
 ): string | null | undefined => {
-  if (!str) return str; // Handle empty, null, or undefined strings
+  if (!str) return str;
   return str
     .toLowerCase()
     .replace(/(^|\s)\w/g, (letter) => letter.toUpperCase());
 };
 
-// Create a new livestock
 export const createLivestock = async (
   req: Request,
   res: Response
@@ -45,7 +44,6 @@ export const createLivestock = async (
       recordedAt,
     } = req.body;
 
-    // Validate required fields
     if (
       !userId ||
       !farmId ||
@@ -69,14 +67,7 @@ export const createLivestock = async (
       return;
     }
 
-    // Placeholder for Azure IoT Hub device registration
-    // TODO: Implement logic to register new device with Azure IoT Hub
-    // const azureDevice = await registerDeviceToAzureIoTHub(deviceId, deviceType, firmware, wifiSsid, wifiPassword);
-    // const connectionString = azureDevice.connectionString; // Example field to store
-
-    // Start a transaction to insert livestock and device
     const result = await db.transaction(async (tx) => {
-      // Insert livestock
       const [livestock] = await tx
         .insert(livestockTable)
         .values({
@@ -99,7 +90,6 @@ export const createLivestock = async (
         })
         .returning();
 
-      // Insert device
       const [device] = await tx
         .insert(devicesTable)
         .values({
@@ -109,8 +99,8 @@ export const createLivestock = async (
           firmware,
           wifiSsid: wifiSsid || null,
           wifiPassword: wifiPassword || null,
-          connectionString: null, // Placeholder: Set to null until Azure IoT Hub is implemented
-          lastOnline: null, // Placeholder: Set to null until device connects
+          connectionString: null,
+          lastOnline: null,
         })
         .returning();
 
@@ -127,7 +117,6 @@ export const createLivestock = async (
   }
 };
 
-// Get all livestock for the authenticated user
 export const getAllLivestock = async (
   req: Request,
   res: Response
@@ -148,7 +137,6 @@ export const getAllLivestock = async (
   }
 };
 
-// Get a single livestock by ID
 export const getLivestockById = async (
   req: Request,
   res: Response
@@ -184,7 +172,6 @@ export const getLivestockById = async (
   }
 };
 
-// Update a livestock
 export const updateLivestock = async (
   req: Request,
   res: Response
@@ -207,7 +194,6 @@ export const updateLivestock = async (
       recordedAt,
     } = req.body;
 
-    // Verify that the livestock exists and belongs to the user
     const existingLivestock = await db
       .select()
       .from(livestockTable)
@@ -226,7 +212,6 @@ export const updateLivestock = async (
       return;
     }
 
-    // If farmId is provided, verify it exists and belongs to the user
     if (farmId) {
       const farm = await db
         .select()
@@ -244,7 +229,6 @@ export const updateLivestock = async (
       }
     }
 
-    // Update livestock with all fields
     const updatedLivestock = await db
       .update(livestockTable)
       .set({
@@ -284,7 +268,6 @@ export const updateLivestock = async (
   }
 };
 
-// Delete a livestock
 export const deleteLivestock = async (
   req: Request,
   res: Response
@@ -292,7 +275,6 @@ export const deleteLivestock = async (
   try {
     const { id } = req.params;
 
-    // Verify that the livestock exists and belongs to the user
     const livestock = await db
       .select()
       .from(livestockTable)
@@ -311,7 +293,6 @@ export const deleteLivestock = async (
       return;
     }
 
-    // Delete livestock
     await db.delete(livestockTable).where(eq(livestockTable.id, parseInt(id)));
 
     res.json({ message: "Livestock deleted successfully" });
@@ -321,7 +302,6 @@ export const deleteLivestock = async (
   }
 };
 
-// Get livestock status counts
 export const getLivestockStatusCounts = async (
   req: Request,
   res: Response
@@ -364,7 +344,6 @@ export const getLivestockStatusCounts = async (
   }
 };
 
-// Get livestock species counts
 export const getLivestockSpeciesCounts = async (
   req: Request,
   res: Response
@@ -397,21 +376,18 @@ export const getLivestockSpeciesCounts = async (
   }
 };
 
-// Get livestock and latest sensor data
 export const getLivestockSensorData = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
     const userId = Number(req.params.userId);
-    // console.log(userId);
-    // Validate userId
+
     if (isNaN(userId)) {
       res.status(400).json({ error: "Invalid user ID" });
       return;
     }
 
-    // Ensure the userId matches the authenticated user
     if (userId !== req.user!.id) {
       res.status(403).json({ error: "Unauthorized access" });
       return;
@@ -423,7 +399,7 @@ export const getLivestockSensorData = async (
         livestockId: sensorDataTable.livestockId,
         temperature: sensorDataTable.temperature,
         heartRate: sensorDataTable.heartRate,
-        respiratoryRate: sensorDataTable.respiratoryRate,
+        sp02: sensorDataTable.sp02,
         timestamp: sensorDataTable.timestamp,
         row_number:
           sql`ROW_NUMBER() OVER (PARTITION BY ${sensorDataTable.livestockId} ORDER BY ${sensorDataTable.timestamp} DESC)`.as(
@@ -440,7 +416,7 @@ export const getLivestockSensorData = async (
           livestockId: latestSensorData.livestockId,
           temperature: latestSensorData.temperature,
           heartRate: latestSensorData.heartRate,
-          respiratoryRate: latestSensorData.respiratoryRate,
+          sp02: latestSensorData.sp02,
           timestamp: latestSensorData.timestamp,
         },
         livestock: {
@@ -490,7 +466,6 @@ export const getLivestockSensorData = async (
   }
 };
 
-// Get livestock and latest sensor data by livestock ID
 export const getLivestockSensorDataById = async (
   req: Request,
   res: Response
@@ -498,7 +473,6 @@ export const getLivestockSensorDataById = async (
   try {
     const livestockId = Number(req.params.livestockId);
 
-    // Validate livestockId
     if (isNaN(livestockId)) {
       res.status(400).json({ error: "Invalid livestock ID" });
       return;
@@ -510,7 +484,7 @@ export const getLivestockSensorDataById = async (
         livestockId: sensorDataTable.livestockId,
         temperature: sensorDataTable.temperature,
         heartRate: sensorDataTable.heartRate,
-        respiratoryRate: sensorDataTable.respiratoryRate,
+        sp02: sensorDataTable.sp02,
         timestamp: sensorDataTable.timestamp,
         row_number:
           sql`ROW_NUMBER() OVER (PARTITION BY ${sensorDataTable.livestockId} ORDER BY ${sensorDataTable.timestamp} DESC)`.as(
@@ -528,7 +502,7 @@ export const getLivestockSensorDataById = async (
           livestockId: latestSensorData.livestockId,
           temperature: latestSensorData.temperature,
           heartRate: latestSensorData.heartRate,
-          respiratoryRate: latestSensorData.respiratoryRate,
+          sp02: latestSensorData.sp02,
           timestamp: latestSensorData.timestamp,
         },
         livestock: {
@@ -575,7 +549,7 @@ export const getLivestockSensorDataById = async (
 
     res.json({
       message: "Livestock and latest sensor data retrieved successfully",
-      data: result[0], // Return the first (and only) result
+      data: result[0],
     });
   } catch (error) {
     console.error("Get livestock and latest sensor data by ID error:", error);

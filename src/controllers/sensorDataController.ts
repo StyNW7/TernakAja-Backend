@@ -7,7 +7,7 @@ import { alias } from "drizzle-orm/pg-core";
 interface SensorAverages {
   avgHeartRate: number;
   avgTemperature: number;
-  avgRespiratoryRate: number;
+  avgSp02: number;
 }
 
 // Fetch the latest sensor data by livestock ID
@@ -120,7 +120,7 @@ export const createSensorData = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const { temperature, heartRate, respiratoryRate, timestamp } = req.body;
+    const { temperature, heartRate, sp02, timestamp } = req.body;
 
     // Validate livestockId
     const livestockId = parseInt(id);
@@ -133,10 +133,10 @@ export const createSensorData = async (
     if (
       temperature === undefined ||
       heartRate === undefined ||
-      respiratoryRate === undefined
+      sp02 === undefined
     ) {
       res.status(400).json({
-        error: "Temperature, heart rate, and respiratory rate are required",
+        error: "Temperature, heart rate, and SpO2 are required",
       });
       return;
     }
@@ -167,7 +167,7 @@ export const createSensorData = async (
         livestockId,
         temperature,
         heartRate,
-        respiratoryRate,
+        sp02,
         timestamp: timestamp ? new Date(timestamp) : new Date(),
       })
       .returning();
@@ -190,7 +190,7 @@ export const getSensorAverages = async (
     const userId = Number(req.params.userId);
 
     if (isNaN(userId)) {
-      res.status(400).json({ error: 'Invalid user ID' });
+      res.status(400).json({ error: "Invalid user ID" });
       return;
     }
 
@@ -202,20 +202,24 @@ export const getSensorAverages = async (
       .limit(1);
 
     if (!user.length) {
-      res.status(404).json({ error: 'User not found or no livestock associated' });
+      res
+        .status(404)
+        .json({ error: "User not found or no livestock associated" });
       return;
     }
 
     // Define aliases for tables
-    const sd = alias(sensorDataTable, 'sd');
-    const l = alias(livestockTable, 'l');
+    const sd = alias(sensorDataTable, "sd");
+    const l = alias(livestockTable, "l");
 
     // Fetch sensor data averages
     const result = await db
       .select({
-        avgHeartRate: sql<number>`AVG(${sd.heartRate})`.as('avg_heart_rate'),
-        avgTemperature: sql<number>`AVG(${sd.temperature})`.as('avg_temperature'),
-        avgRespiratoryRate: sql<number>`AVG(${sd.respiratoryRate})`.as('avg_respiratory_rate'),
+        avgHeartRate: sql<number>`AVG(${sd.heartRate})`.as("avg_heart_rate"),
+        avgTemperature: sql<number>`AVG(${sd.temperature})`.as(
+          "avg_temperature"
+        ),
+        avgSp02: sql<number>`AVG(${sd.sp02})`.as("avg_sp02"),
       })
       .from(sd)
       .innerJoin(l, eq(sd.livestockId, l.id))
@@ -227,23 +231,25 @@ export const getSensorAverages = async (
       );
 
     if (!result.length || result[0].avgHeartRate === null) {
-      res.status(404).json({ error: 'No sensor data found for the user in the last hour' });
+      res
+        .status(404)
+        .json({ error: "No sensor data found for the user in the last hour" });
       return;
     }
 
     const averages: SensorAverages = {
       avgHeartRate: result[0].avgHeartRate,
       avgTemperature: result[0].avgTemperature,
-      avgRespiratoryRate: result[0].avgRespiratoryRate,
+      avgSp02: result[0].avgSp02,
     };
 
     res.json({
-      message: 'Sensor data averages retrieved successfully',
+      message: "Sensor data averages retrieved successfully",
       data: averages,
     });
   } catch (error) {
-    console.error('Get sensor averages error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Get sensor averages error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -256,12 +262,20 @@ export const getLivestockSensorAveragesSevenDay = async (
 
     const result = await db
       .select({
-        day: sql`DATE(${sensorDataTable.timestamp})`.as('day'),
-        avg_temperature: sql`AVG(${sensorDataTable.temperature})`.as('avg_temperature'),
-        avg_heart_rate: sql`AVG(${sensorDataTable.heartRate})`.as('avg_heart_rate'),
+        day: sql`DATE(${sensorDataTable.timestamp})`.as("day"),
+        avg_temperature: sql`AVG(${sensorDataTable.temperature})`.as(
+          "avg_temperature"
+        ),
+        avg_heart_rate: sql`AVG(${sensorDataTable.heartRate})`.as(
+          "avg_heart_rate"
+        ),
+        avg_sp02: sql`AVG(${sensorDataTable.sp02})`.as("avg_sp02"),
       })
       .from(sensorDataTable)
-      .innerJoin(livestockTable, eq(sensorDataTable.livestockId, livestockTable.id))
+      .innerJoin(
+        livestockTable,
+        eq(sensorDataTable.livestockId, livestockTable.id)
+      )
       .where(
         and(
           eq(livestockTable.userId, userId),
@@ -272,23 +286,26 @@ export const getLivestockSensorAveragesSevenDay = async (
       .orderBy(sql`DATE(${sensorDataTable.timestamp}) DESC`);
 
     if (!result.length) {
-      res.status(404).json({ error: 'No sensor data found for this user in the last 7 days' });
+      res.status(404).json({
+        error: "No sensor data found for this user in the last 7 days",
+      });
       return;
     }
 
-    const formattedResult = result.map(row => ({
+    const formattedResult = result.map((row) => ({
       day: row.day,
       avg_temperature: Number(row.avg_temperature),
       avg_heart_rate: Number(row.avg_heart_rate),
+      avg_sp02: Number(row.avg_sp02),
     }));
 
     res.json({
-      message: 'Livestock sensor averages retrieved successfully',
+      message: "Livestock sensor averages retrieved successfully",
       data: formattedResult,
     });
   } catch (error) {
-    console.error('Get livestock sensor averages error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Get livestock sensor averages error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -301,12 +318,20 @@ export const getLivestockSensorAveragesSevenDayById = async (
 
     const result = await db
       .select({
-        day: sql`DATE(${sensorDataTable.timestamp})`.as('day'),
-        avg_temperature: sql`AVG(${sensorDataTable.temperature})`.as('avg_temperature'),
-        avg_heart_rate: sql`AVG(${sensorDataTable.heartRate})`.as('avg_heart_rate'),
+        day: sql`DATE(${sensorDataTable.timestamp})`.as("day"),
+        avg_temperature: sql`AVG(${sensorDataTable.temperature})`.as(
+          "avg_temperature"
+        ),
+        avg_heart_rate: sql`AVG(${sensorDataTable.heartRate})`.as(
+          "avg_heart_rate"
+        ),
+        avg_sp02: sql`AVG(${sensorDataTable.sp02})`.as("avg_sp02"),
       })
       .from(sensorDataTable)
-      .innerJoin(livestockTable, eq(sensorDataTable.livestockId, livestockTable.id))
+      .innerJoin(
+        livestockTable,
+        eq(sensorDataTable.livestockId, livestockTable.id)
+      )
       .where(
         and(
           eq(livestockTable.id, livestockId),
@@ -317,22 +342,25 @@ export const getLivestockSensorAveragesSevenDayById = async (
       .orderBy(sql`DATE(${sensorDataTable.timestamp}) DESC`);
 
     if (!result.length) {
-      res.status(404).json({ error: 'No sensor data found for this livestock in the last 7 days' });
+      res.status(404).json({
+        error: "No sensor data found for this livestock in the last 7 days",
+      });
       return;
     }
 
-    const formattedResult = result.map(row => ({
+    const formattedResult = result.map((row) => ({
       day: row.day,
       avg_temperature: Number(row.avg_temperature),
       avg_heart_rate: Number(row.avg_heart_rate),
+      avg_sp02: Number(row.avg_sp02),
     }));
 
     res.json({
-      message: 'Livestock sensor averages retrieved successfully',
+      message: "Livestock sensor averages retrieved successfully",
       data: formattedResult,
     });
   } catch (error) {
-    console.error('Get livestock sensor averages error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Get livestock sensor averages error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
