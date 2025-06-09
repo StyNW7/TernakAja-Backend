@@ -18,7 +18,7 @@ const AI_ADDR = process.env.AI_ADDR || "";
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:3000", BACKEND_ADDR, "http://172.178.82.251", AI_ADDR],
+    origin: ["http://localhost:5173", "http://localhost:3000", BACKEND_ADDR, "http://172.178.82.251", AI_ADDR, "https://moorgan.vercel.app/"],
     credentials: true,
   })
 );
