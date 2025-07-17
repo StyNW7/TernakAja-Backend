@@ -1,14 +1,14 @@
-<h1 align="center"> Moorgan - Backend </h1> <br>
+<h1 align="center"> TernakAja - Backend </h1> <br>
 <p align="center">
   <a href="">
-    <img alt="Moorgan" title="Moorgan" src="./Images/logo.png" width="360px">
+    <img width="1613" height="528" alt="TernakAja" src="https://github.com/user-attachments/assets/6cc18477-97c0-4b9a-8b1a-96a8e2c4f98f" />
   </a>
 </p>
 
 <p align="center">
-  <a href="https://education.elevaite.id/" target="_blank"><b>Microsoft ElevAIte - 2025</b></a><br>
-  <b>Moorgan</b> is an <b>intelligent livestock monitoring system</b> to solve SDG Number 2 Zero Hunger (Especially in Agriculture).
-  <b>Moorgan</b>  helps farmers monitor the health and behavior of their livestock in real-time using <b>IoT</b> and <b>AI anomaly detection</b>.
+  <b>TernakAja</b> is an <b>intelligent livestock monitoring system</b> to solve SDG Number 2 Zero Hunger (Especially in Agriculture).
+  <b>TernakAja</b> helps farmers monitor the health and behavior of their livestock in real-time using <b>IoT</b> and <b>AI anomaly detection</b>.
+ <a href="https://education.elevaite.id/" target="_blank"><b>Microsoft ElevAIte - 2025</b></a><br>
 </p>
 
 ---
@@ -24,7 +24,6 @@
 - [Team](#👥-team)
 - [Contact](#📬-contact)
 
-
 ---
 
 ## 📚 Complete Documentation
@@ -34,8 +33,8 @@
     <a href="https://stanley-n-wijaya.notion.site/Moorgan-Documentation-1df73555b71f80fd9fd9dbfc655ce5a7?pvs=4">Notion Documentation</a>
     <li><b>Demo Video</b></li>
     <a href="https://binusianorg-my.sharepoint.com/personal/stanley_wijaya004_binus_ac_id/_layouts/15/guestaccess.aspx?share=EYMWsQ71C9NHv2bWAHrP4L8BMcDJ3e6a9U_hsyYi_i-wlw&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=eWRR7c">Link Demo Video</a>
-    <li><b>Moorgan Google Drive</b></li>
-    <a href="https://drive.google.com/drive/folders/1Slexo254LAhwieCQazA-peBe4Vl8fZJ5?usp=sharing">Moorgan Documents + Preliminary Research (Google Drive)</a>
+    <li><b>TernakAja Google Drive</b></li>
+    <a href="https://drive.google.com/drive/folders/1Slexo254LAhwieCQazA-peBe4Vl8fZJ5?usp=sharing">TernakAja Documents + Preliminary Research (Google Drive)</a>
 </ul>
 
 ---
@@ -57,11 +56,10 @@
 
 ---
 
-
 ## 🌟 Introduction
-**Moorgan** revolutionizes livestock farming through intelligent, real-time health and behavior monitoring. Combining IoT sensors and AI anomaly detection, Moorgan empowers farmers to detect health issues early, prevent loss, and optimize livestock productivity.
-> "Every heartbeat, every step, every breath of your livestock matters. Moorgan listens and protects."   
-> — *Moorgan Manifesto*
+**TernakAja** revolutionizes livestock farming through intelligent, real-time health and behavior monitoring. Combining IoT sensors and AI anomaly detection, TernakAja empowers farmers to detect health issues early, prevent loss, and optimize livestock productivity.
+> "Every heartbeat, every step, every breath of your livestock matters. TernakAja listens and protects."   
+> — *TernakAja Manifesto*
 
 ---
 
@@ -119,7 +117,7 @@ Visit the deployed application here (frontend only):
 - **Node.js** (v18 or above)
 - **Git**
 
-### Run Local for Moorgan Frontend
+### Run Local for TernakAja Backend
 ```bash
 git clone https://github.com/StyNW7/Moorgan-Backend.git
 cd moorgan-backend
@@ -127,24 +125,3 @@ npm install
 npm run dev
 npm run db:studio
 ```
-
----
-
-## 👥 Team
-This project was created for Microsoft ElevAIte 2025 by Team Moorganino:
-
-- **Stanley Nathanael Wijaya** - 2702217125
-- **Nathaniel Alexander** - 2702276872
-- **Jason Melvin Hartono** - 2702281481
-- **David Christian** - 2702253143
-- **Farrel Tobias Saputro** - 2702224036
-
----
-
-## 📬 Contact
-Have questions or want to collaborate?
-
-- 📧 Email: stanley.n.wijaya7@gmail.com
-- 💬 Discord: `stynw7`
-
-<code>For a Better World by Monitoring Livestocks through Moorgan 🐮🌿</code>
