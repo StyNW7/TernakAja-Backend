@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import { db } from "../db/drizzle";
-import { usersTable, farmsTable } from "../db/schema";
+import { usersTable } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { generateSessionJwt } from "../utils/jwt";
 
@@ -41,18 +41,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
           role,
         })
         .returning();
-
-      // Create farm with same ID as user
-      await tx.insert(farmsTable).values({
-        id: user.id, // Set farm ID to match user ID
-        userId: user.id,
-        name: name,
-        location: "Indonesia",
-        address: `${name} Street`,
-        type: "medium",
-        createdAt: new Date(),
-      });
-
       return user;
     });
 

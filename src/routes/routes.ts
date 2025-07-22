@@ -13,13 +13,6 @@ import {
   updateLivestock,
 } from "../controllers/livestockController";
 import {
-  createFarm,
-  deleteFarm,
-  getAllFarms,
-  getFarmById,
-  updateFarm,
-} from "../controllers/farmController";
-import {
   createSensorData,
   getLatestSensorData,
   getLivestockSensorAveragesSevenDay,
@@ -27,10 +20,6 @@ import {
   getSensorAverages,
   getSensorDataHistory,
 } from "../controllers/sensorDataController";
-import {
-  getAnomaliesData,
-  updateAnomaliesData,
-} from "../controllers/anomaliesController";
 import {
   getNotificationsWithLivestockAndSensorData,
   getRecentNotifications,
@@ -42,13 +31,6 @@ const router = Router();
 router.post("/register", register);
 router.post("/login", login);
 router.get("/profile", verifyJwt, getProfile);
-
-// Farm routes
-router.post("/farms", verifyJwt, createFarm);
-router.get("/farms", verifyJwt, getAllFarms);
-router.get("/farms/:id", verifyJwt, getFarmById);
-router.put("/farms/:id", verifyJwt, updateFarm);
-router.delete("/farms/:id", verifyJwt, deleteFarm);
 
 // Livestock routes
 router.post("/livestock", verifyJwt, createLivestock);
@@ -82,13 +64,21 @@ router.get(
   getSensorDataHistory
 );
 router.post("/livestock/:id/sensor-data", verifyJwt, createSensorData);
-router.get("/livestock/:userId/sensor-data/average-recent", verifyJwt, getSensorAverages);
-router.get("/livestock/:userId/sensor-data/seven-day-average", verifyJwt, getLivestockSensorAveragesSevenDay);
-router.get("/livestock/:id/sensor-data/average-detail", verifyJwt, getLivestockSensorAveragesSevenDayById);
-
-// Anomalies routes
-router.get("/livestock/:id/anomalies", verifyJwt, getAnomaliesData);
-router.put("/livestock/:id/anomalies", verifyJwt, updateAnomaliesData);
+router.get(
+  "/livestock/:userId/sensor-data/average-recent",
+  verifyJwt,
+  getSensorAverages
+);
+router.get(
+  "/livestock/:userId/sensor-data/seven-day-average",
+  verifyJwt,
+  getLivestockSensorAveragesSevenDay
+);
+router.get(
+  "/livestock/:id/sensor-data/average-detail",
+  verifyJwt,
+  getLivestockSensorAveragesSevenDayById
+);
 
 // Notifications routes
 router.get(

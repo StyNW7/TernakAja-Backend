@@ -1,11 +1,6 @@
 import { Request, Response } from "express";
 import { db } from "../db/drizzle";
-import {
-  livestockTable,
-  farmsTable,
-  sensorDataTable,
-  devicesTable,
-} from "../db/schema";
+import { livestockTable, sensorDataTable, devicesTable } from "../db/schema";
 import { eq, and, sql } from "drizzle-orm";
 
 const toTitleCase = (
@@ -24,12 +19,7 @@ export const createLivestock = async (
   try {
     const {
       userId,
-      farmId,
       deviceId,
-      deviceType,
-      firmware,
-      wifiSsid,
-      wifiPassword,
       name,
       species,
       breed,
@@ -46,10 +36,7 @@ export const createLivestock = async (
 
     if (
       !userId ||
-      !farmId ||
       !deviceId ||
-      !deviceType ||
-      !firmware ||
       !name ||
       !species ||
       !breed ||
@@ -62,7 +49,7 @@ export const createLivestock = async (
     ) {
       res.status(400).json({
         error:
-          "Missing required fields: userId, farmId, deviceId, deviceType, firmware, name, species, breed, gender, birthDate, status, height, weight, bodyConditionScore",
+          "Missing required fields: userId name, species, breed, gender, birthDate, status, height, weight, bodyConditionScore",
       });
       return;
     }
@@ -71,7 +58,6 @@ export const createLivestock = async (
       const [livestock] = await tx
         .insert(livestockTable)
         .values({
-          farmId,
           userId,
           name,
           species: toTitleCase(species),
@@ -95,12 +81,7 @@ export const createLivestock = async (
         .values({
           livestockId: livestock.id,
           deviceId,
-          deviceType,
-          firmware,
-          wifiSsid: wifiSsid || null,
-          wifiPassword: wifiPassword || null,
-          connectionString: null,
-          lastOnline: null,
+          lastUpdate: null,
         })
         .returning();
 
@@ -179,7 +160,6 @@ export const updateLivestock = async (
   try {
     const { id } = req.params;
     const {
-      farmId,
       name,
       species,
       breed,
@@ -212,27 +192,9 @@ export const updateLivestock = async (
       return;
     }
 
-    if (farmId) {
-      const farm = await db
-        .select()
-        .from(farmsTable)
-        .where(
-          and(eq(farmsTable.id, farmId), eq(farmsTable.userId, req.user!.id))
-        )
-        .limit(1);
-
-      if (!farm.length) {
-        res
-          .status(403)
-          .json({ error: "Farm not found or you do not have access" });
-        return;
-      }
-    }
-
     const updatedLivestock = await db
       .update(livestockTable)
       .set({
-        farmId: farmId || existingLivestock[0].farmId,
         name: name || existingLivestock[0].name,
         species: species || existingLivestock[0].species,
         breed: breed || existingLivestock[0].breed,
@@ -313,26 +275,18 @@ export const getLivestockStatusCounts = async (
       .select({
         total: sql`COUNT(*)`.as("total"),
         healthy:
-          sql`SUM(CASE WHEN ${livestockTable.status} = 'Healthy' THEN 1 ELSE 0 END)`.as(
+          sql`COUNT(CASE WHEN ${livestockTable.status} = 'healthy' THEN 1 ELSE NULL END)`.as(
             "healthy"
           ),
-        needs_attention:
-          sql`SUM(CASE WHEN ${livestockTable.status} = 'Needs Attention' THEN 1 ELSE 0 END)`.as(
-            "needs_attention"
-          ),
-        critical:
-          sql`SUM(CASE WHEN ${livestockTable.status} = 'Critical' THEN 1 ELSE 0 END)`.as(
-            "critical"
+        unhealthy:
+          sql`COUNT(CASE WHEN ${livestockTable.status} = 'unhealthy' THEN 1 ELSE NULL END)`.as(
+            "unhealthy"
           ),
       })
       .from(livestockTable)
-      .where(eq(livestockTable.userId, userId))
-      .limit(1);
+      .where(eq(livestockTable.userId, userId));
 
-    if (!result.length) {
-      res.status(404).json({ error: "No livestock found for this user" });
-      return;
-    }
+    console.log(result);
 
     res.json({
       message: "Livestock status counts retrieved successfully",
@@ -421,7 +375,6 @@ export const getLivestockSensorData = async (
         },
         livestock: {
           id: livestockTable.id,
-          farmId: livestockTable.farmId,
           userId: livestockTable.userId,
           name: livestockTable.name,
           species: livestockTable.species,
@@ -507,7 +460,6 @@ export const getLivestockSensorDataById = async (
         },
         livestock: {
           id: livestockTable.id,
-          farmId: livestockTable.farmId,
           userId: livestockTable.userId,
           name: livestockTable.name,
           species: livestockTable.species,

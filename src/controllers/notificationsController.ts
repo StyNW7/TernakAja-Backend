@@ -70,7 +70,6 @@ export const getNotificationsWithLivestockAndSensorData = async (
         },
         livestock: {
           id: livestockTable.id,
-          farmId: livestockTable.farmId,
           userId: livestockTable.userId,
           name: livestockTable.name,
           species: livestockTable.species,
