@@ -286,7 +286,7 @@ export const getLivestockStatusCounts = async (
       .from(livestockTable)
       .where(eq(livestockTable.userId, userId));
 
-    console.log(result);
+    // console.log(result);
 
     res.json({
       message: "Livestock status counts retrieved successfully",
