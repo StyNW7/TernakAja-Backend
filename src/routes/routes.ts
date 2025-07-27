@@ -24,6 +24,7 @@ import {
   getNotificationsWithLivestockAndSensorData,
   getRecentNotifications,
 } from "../controllers/notificationsController";
+import { getSasToken } from "../controllers/deviceController";
 
 const router = Router();
 
@@ -91,5 +92,8 @@ router.get(
   verifyJwt,
   getNotificationsWithLivestockAndSensorData
 );
+
+// Generate SAS Token
+router.post("/sas", getSasToken);
 
 export default router;
